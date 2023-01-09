@@ -42,3 +42,8 @@ body {
     background-color: #FEAE00;
     color: white;
 }
+
+/* main heading 1 font size */
+main h1 {
+    font-size: 48px
+}
