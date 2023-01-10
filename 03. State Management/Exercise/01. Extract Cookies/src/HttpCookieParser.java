@@ -1,5 +1,8 @@
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -56,6 +59,26 @@ public class HttpCookieParser {
                     .forEach(kvp -> cookies.put(kvp[0], kvp[1]));
         }
         return Collections.unmodifiableMap(cookies);
+    }
+
+    private static Map<String, String> parseRequestLine(BufferedReader reader) throws IOException {
+        String requestLine = reader.readLine();
+
+        Matcher matcher = REQUEST_LINE_PATTERN.matcher(requestLine);
+
+        if (!matcher.matches() ||
+                !HTTP_VERSIONS.contains(matcher.group(REQUEST_HTTP_VERSION)) ||
+                !HTTP_METHODS.contains(matcher.group(REQUEST_METHOD))) {
+            throw new IllegalArgumentException("Invalid Request Line: " + requestLine);
+        }
+
+        String httpVersion = matcher.group(REQUEST_HTTP_VERSION);
+        String httpMethod = matcher.group(REQUEST_METHOD);
+        String resource = matcher.group(REQUEST_RESOURCE);
+
+        return Map.of(REQUEST_METHOD, httpMethod,
+                REQUEST_RESOURCE, resource,
+                REQUEST_HTTP_VERSION, httpVersion);
     }
 
     private enum HttpMethod {GET, POST}
