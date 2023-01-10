@@ -2,10 +2,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -71,6 +68,9 @@ public class HTTPParser {
             Map<String, String> request = parseRequestLine(reader);
             System.out.println(request);
 
+            Map<String, String> headers = parseHeaders(reader);
+            System.out.println(headers);
+
         } catch (IOException | IllegalArgumentException e) {
             LOGGER.log(Level.SEVERE, "ERROR", e);
         }
@@ -105,6 +105,22 @@ public class HTTPParser {
         return Map.of(REQUEST_METHOD, httpMethod,
                 REQUEST_RESOURCE, resource,
                 REQUEST_HTTP_VERSION, httpVersion);
+    }
+
+    private static Map<String, String> parseHeaders(BufferedReader reader) throws IOException {
+        Map<String, String> headers = new LinkedHashMap<>();
+        String header;
+
+        while ((header = reader.readLine()) != null && header.length() > 0) {
+            Matcher matcher = HEADER_PATTERN.matcher(header);
+            if (matcher.matches() && VALID_HEADERS.contains(matcher.group(KEY))) {
+                String key = matcher.group(KEY);
+                String value = matcher.group(VALUE);
+                headers.put(key, value);
+            }
+        }
+
+        return Collections.unmodifiableMap(headers);
     }
 
     private enum HttpMethod {GET, POST}
