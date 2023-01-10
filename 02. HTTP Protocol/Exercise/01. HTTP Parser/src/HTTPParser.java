@@ -28,7 +28,7 @@ public class HTTPParser {
     public static final String KEY = "key";
     public static final String VALUE = "value";
 
-    public static final String RESPONSE_LINE = HTTP_1_1 + " %d %d";
+    public static final String RESPONSE_LINE = HTTP_1_1 + " %d %s";
     public static final String RESPONSE_BODY_GET = "Greetings %s!";
     public static final String RESPONSE_BODY_POST = RESPONSE_BODY_GET + " You have successfully created %s with %s.";
     public static final String POST_RESPONSE_ITEMS_FORMAT = "%s - %s";
@@ -77,6 +77,67 @@ public class HTTPParser {
         } catch (IOException | IllegalArgumentException e) {
             LOGGER.log(Level.SEVERE, "ERROR", e);
         }
+    }
+
+    private static String getResponseLine(HttpResponse response) {
+        return String.format(RESPONSE_LINE, response.code, response.name);
+    }
+
+    private static String decodeAuthorization(String encoded) {
+        if (!encoded.startsWith(AUTHORIZATION_PREFIX)) {
+            throw new IllegalArgumentException("Unknown encoding for string: " + encoded);
+        }
+
+        return new String(Base64.getDecoder()
+                .decode(encoded.substring(AUTHORIZATION_PREFIX.length()).getBytes(StandardCharsets.UTF_8)),
+                StandardCharsets.UTF_8);
+    }
+
+    private static void attachResponseHeaders(Map<String, String> headers,
+                                              StringBuilder responseBuilder) {
+        headers.entrySet().stream().filter(kvp -> RESPONSE_HEADERS.contains(kvp.getKey()))
+                .forEach(kvp -> responseBuilder
+                        .append(kvp.getKey())
+                        .append(HEADER_SEPARATOR)
+                        .append(kvp.getValue())
+                        .append(HTTP_LINE_SEPARATOR));
+        responseBuilder.append(HTTP_LINE_SEPARATOR);
+    }
+
+    private static void buildResponse(Map<String, String> headers,
+                                      StringBuilder responseBuilder,
+                                      String responseLine,
+                                      String responseBody) {
+        responseBuilder.append(responseLine).append(HTTP_LINE_SEPARATOR);
+        attachResponseHeaders(headers, responseBuilder);
+        responseBuilder.append(responseBody);
+    }
+
+    private static void processRequest(String method,
+                                       Map<String, String> headers,
+                                       Map<String, String> bodyParams,
+                                       StringBuilder responseBuilder) {
+        String username = decodeAuthorization(headers.get(HEADER_AUTHORIZATION));
+
+        String responseBody;
+        switch (HttpMethod.valueOf(method)) {
+            case GET:
+                responseBody = String.format(RESPONSE_BODY_GET, username);
+                break;
+            case POST:
+                String itemName = bodyParams.entrySet().stream().findFirst().orElseThrow().getValue();
+                String itemParts = bodyParams.entrySet()
+                        .stream().skip(1)
+                        .map(param -> String.format(POST_RESPONSE_ITEMS_FORMAT, param.getKey(), param.getValue()))
+                        .collect(Collectors.joining(POST_RESPONSE_ITEMS_DELIMITER));
+                responseBody = String.format(RESPONSE_BODY_POST, username, itemName, itemParts);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown or unsupported HTTP method: " + method);
+        }
+
+        buildResponse(headers, responseBuilder,
+                getResponseLine(HttpResponse.OK), responseBody);
     }
 
     private static Set<String> parseUrls(BufferedReader reader) throws IOException {
