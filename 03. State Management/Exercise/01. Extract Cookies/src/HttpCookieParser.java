@@ -1,6 +1,9 @@
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,7 +52,24 @@ public class HttpCookieParser {
             .map(Enum::name)
             .collect(Collectors.toUnmodifiableSet());
 
+    public static void main(String[] args) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
+            Map<String, String> request = parseRequestLine(reader);
+            Map<String, String> headers = parseHeaders(reader);
+            Map<String, String> bodyParams = parseBodyParams(reader);
 
+            Map<String, String> cookies = parseCookies(headers.get(HEADER_COOKIE));
+
+            StringBuilder responseBuilder = new StringBuilder();
+
+            cookies.forEach((key, value) -> responseBuilder
+                    .append(key).append(" <-> ").append(value).append(System.lineSeparator()));
+
+            System.out.println(responseBuilder.toString());
+        } catch (IOException | IllegalArgumentException e) {
+            LOGGER.log(Level.SEVERE, "ERROR", e);
+        }
+    }
 
     private static Map<String, String> parseCookies(String cookiesStr) {
         Map<String, String> cookies = new LinkedHashMap<>();
