@@ -63,17 +63,16 @@ public class HTTPParser {
     public static void main(String[] args) {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
             Set<String> urls = parseUrls(reader);
-            System.out.println(urls);
-
             Map<String, String> request = parseRequestLine(reader);
-            System.out.println(request);
-
             Map<String, String> headers = parseHeaders(reader);
-            System.out.println(headers);
-
             Map<String, String> bodyParams = parseBodyParams(reader);
-            System.out.println(bodyParams);
 
+            StringBuilder responseBuilder = new StringBuilder();
+            if (isValidRequest(urls, request, headers, bodyParams, responseBuilder)) {
+                processRequest(request.get(REQUEST_METHOD), headers, bodyParams, responseBuilder);
+            }
+
+            System.out.println(responseBuilder);
         } catch (IOException | IllegalArgumentException e) {
             LOGGER.log(Level.SEVERE, "ERROR", e);
         }
@@ -138,6 +137,30 @@ public class HTTPParser {
 
         buildResponse(headers, responseBuilder,
                 getResponseLine(HttpResponse.OK), responseBody);
+    }
+
+    private static boolean isValidRequest(Set<String> urls,
+                                          Map<String, String> request,
+                                          Map<String, String> headers,
+                                          Map<String, String> bodyParams,
+                                          StringBuilder responseBuilder) {
+        if (!urls.contains(request.get(REQUEST_RESOURCE))) {
+            buildResponse(headers, responseBuilder,
+                    getResponseLine(HttpResponse.NOT_FOUND),
+                    HttpResponse.NOT_FOUND.description);
+        } else if (!headers.containsKey(HEADER_AUTHORIZATION)) {
+            buildResponse(headers, responseBuilder,
+                    getResponseLine(HttpResponse.UNAUTHORIZED),
+                    HttpResponse.UNAUTHORIZED.description);
+        } else if (HttpMethod.POST == HttpMethod.valueOf(request.get(REQUEST_METHOD)) && bodyParams.isEmpty()) {
+            buildResponse(headers, responseBuilder,
+                    getResponseLine(HttpResponse.BAD_REQUEST),
+                    HttpResponse.BAD_REQUEST.description);
+        } else {
+            return true;
+        }
+
+        return false;
     }
 
     private static Set<String> parseUrls(BufferedReader reader) throws IOException {
@@ -228,40 +251,3 @@ public class HTTPParser {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
