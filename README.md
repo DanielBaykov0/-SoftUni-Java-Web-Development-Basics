@@ -12,4 +12,4 @@ Java Web Development Basics course at SoftUni - January 2019
 
 * [HTTP parser](https://github.com/DanielBaykov0/SoftUni-Java-Web-Development-Basics/tree/main/02.%20HTTP%20Protocol/Exercise/02.%20Improved%20HTTP%20Parser/src)
 
-* [Cookies parser](https://github.com/Martin-BG/SoftUni-Java-Web-Development-Basics-Jan-2019/tree/master/03.%20State%20Management/Exercises/02.%20Improved%20HTTP%20Cookies%20Parser/src/improvedhttpcookiesparser)
+* [Cookies parser](https://github.com/DanielBaykov0/SoftUni-Java-Web-Development-Basics/tree/main/03.%20State%20Management/Exercise/02.%20Improved%20HTTP%20Cookies%20Parser/src)
