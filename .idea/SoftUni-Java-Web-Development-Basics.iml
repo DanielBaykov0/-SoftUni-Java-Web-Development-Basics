@@ -5,6 +5,7 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/02. HTTP Protocol/Exercise/01. HTTP Parser/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/02. HTTP Protocol/Exercise/02. Improved HTTP Parser/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/03. State Management/Exercise/01. Extract Cookies/src" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
