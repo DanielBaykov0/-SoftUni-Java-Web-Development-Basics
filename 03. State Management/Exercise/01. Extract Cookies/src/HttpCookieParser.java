@@ -1,4 +1,4 @@
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -47,6 +47,16 @@ public class HttpCookieParser {
             .collect(Collectors.toUnmodifiableSet());
 
 
+
+    private static Map<String, String> parseCookies(String cookiesStr) {
+        Map<String, String> cookies = new LinkedHashMap<>();
+        if (cookiesStr != null) {
+            Arrays.stream(COOKIES_PATTERN.split(cookiesStr))
+                    .map(COOKIES_PAIR_PATTERN::split)
+                    .forEach(kvp -> cookies.put(kvp[0], kvp[1]));
+        }
+        return Collections.unmodifiableMap(cookies);
+    }
 
     private enum HttpMethod {GET, POST}
 }
