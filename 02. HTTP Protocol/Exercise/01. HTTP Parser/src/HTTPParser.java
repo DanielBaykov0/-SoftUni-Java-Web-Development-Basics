@@ -4,11 +4,14 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class HTTPParser {
 
@@ -56,10 +59,17 @@ public class HTTPParser {
 
     public static final Set<String> HTTP_VERSIONS = Set.of(HTTP_1_1);
 
+    private static final Set<String> HTTP_METHODS = Stream.of(HttpMethod.values())
+            .map(Enum::name)
+            .collect(Collectors.toUnmodifiableSet());
+
     public static void main(String[] args) {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
             Set<String> urls = parseUrls(reader);
             System.out.println(urls);
+
+            Map<String, String> request = parseRequestLine(reader);
+            System.out.println(request);
 
         } catch (IOException | IllegalArgumentException e) {
             LOGGER.log(Level.SEVERE, "ERROR", e);
@@ -77,7 +87,29 @@ public class HTTPParser {
 
         return Collections.unmodifiableSet(urls);
     }
+
+    private static Map<String, String> parseRequestLine(BufferedReader reader) throws IOException {
+        String requestLine = reader.readLine();
+        Matcher matcher = REQUEST_LINE_PATTERN.matcher(requestLine);
+
+        if (!matcher.matches() ||
+                !HTTP_VERSIONS.contains(matcher.group(REQUEST_HTTP_VERSION)) ||
+                !HTTP_METHODS.contains(matcher.group(REQUEST_METHOD))) {
+            throw new IllegalArgumentException("Invalid Request Line: " + requestLine);
+        }
+
+        String httpVersion = matcher.group(REQUEST_HTTP_VERSION);
+        String httpMethod = matcher.group(REQUEST_METHOD);
+        String resource = matcher.group(REQUEST_RESOURCE);
+
+        return Map.of(REQUEST_METHOD, httpMethod,
+                REQUEST_RESOURCE, resource,
+                REQUEST_HTTP_VERSION, httpVersion);
+    }
+
+    private enum HttpMethod {GET, POST}
 }
+
 
 
 
