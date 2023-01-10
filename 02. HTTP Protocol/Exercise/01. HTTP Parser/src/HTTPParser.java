@@ -71,6 +71,9 @@ public class HTTPParser {
             Map<String, String> headers = parseHeaders(reader);
             System.out.println(headers);
 
+            Map<String, String> bodyParams = parseBodyParams(reader);
+            System.out.println(bodyParams);
+
         } catch (IOException | IllegalArgumentException e) {
             LOGGER.log(Level.SEVERE, "ERROR", e);
         }
@@ -123,7 +126,46 @@ public class HTTPParser {
         return Collections.unmodifiableMap(headers);
     }
 
+    private static Map<String, String> parseBodyParams(BufferedReader reader) throws IOException {
+        Map<String, String> params = new LinkedHashMap<>();
+
+        String paramsLine = reader.readLine();
+        if (paramsLine != null) {
+            Matcher matcher = BODY_PARAMS_PATTERN.matcher(paramsLine);
+            while (matcher.find()) {
+                String paramName = matcher.group(KEY);
+                String paramValue = matcher.group(VALUE);
+                params.put(paramName, paramValue);
+            }
+        }
+
+        return Collections.unmodifiableMap(params);
+    }
+
     private enum HttpMethod {GET, POST}
+
+    private enum HttpResponse {
+        OK(200, "OK", "Success"),
+
+        BAD_REQUEST(400, "Bab Request",
+                "There was an error with the requested functionality due to malformed request."),
+
+        UNAUTHORIZED(401, "Unauthorized",
+                "You are not authorized to access the requested functionality."),
+
+        NOT_FOUND(404, "Not Found",
+                "The requested functionality was not found.");
+
+        private final int code;
+        private final String name;
+        private final String description;
+
+        HttpResponse(int code, String name, String description) {
+            this.code = code;
+            this.name = name;
+            this.description = description;
+        }
+    }
 }
 
 
