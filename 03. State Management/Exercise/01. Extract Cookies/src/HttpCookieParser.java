@@ -81,5 +81,35 @@ public class HttpCookieParser {
                 REQUEST_HTTP_VERSION, httpVersion);
     }
 
+    private static Map<String, String> parseHeaders(BufferedReader reader) throws IOException {
+        Map<String, String> headers = new LinkedHashMap<>();
+        String header;
+        while ((header = reader.readLine()) != null && header.length() > 0) {
+            Matcher matcher = HEADER_PATTERN.matcher(header);
+            if (matcher.matches() && VALID_HEADERS.contains(matcher.group(KEY))) {
+                String key = matcher.group(KEY);
+                String value = matcher.group(VALUE);
+                headers.put(key, value);
+            }
+        }
+        return Collections.unmodifiableMap(headers);
+    }
+
+    private static Map<String, String> parseBodyParams(BufferedReader reader) throws IOException {
+        Map<String, String> params = new LinkedHashMap<>();
+
+        String paramsLine = reader.readLine();
+        if (paramsLine != null) {
+            Matcher matcher = BODY_PARAMS_PATTERN.matcher(paramsLine);
+            while (matcher.find()) {
+                String paramName = matcher.group(KEY);
+                String paramValue = matcher.group(VALUE);
+                params.put(paramName, paramValue);
+            }
+        }
+
+        return Collections.unmodifiableMap(params);
+    }
+
     private enum HttpMethod {GET, POST}
 }
