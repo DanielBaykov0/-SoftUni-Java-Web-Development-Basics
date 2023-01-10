@@ -1,5 +1,13 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class HTTPParser {
@@ -31,7 +39,7 @@ public class HTTPParser {
                     REQUEST_METHOD, REQUEST_RESOURCE, REQUEST_HTTP_VERSION));
 
     public static final Pattern BODY_PARAMS_PATTERN = Pattern.compile(
-            String.format("&?(?<%s>[^ :]+)%s(?<%s>.+)$",
+            String.format("&?(?<%s>[A-Za-z0-9]+)=(?<%s>[A-Za-z0-9]+)",
                     KEY, VALUE));
 
     public static final Pattern HEADER_PATTERN = Pattern.compile(
@@ -48,7 +56,27 @@ public class HTTPParser {
 
     public static final Set<String> HTTP_VERSIONS = Set.of(HTTP_1_1);
 
+    public static void main(String[] args) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
+            Set<String> urls = parseUrls(reader);
+            System.out.println(urls);
 
+        } catch (IOException | IllegalArgumentException e) {
+            LOGGER.log(Level.SEVERE, "ERROR", e);
+        }
+    }
+
+    private static Set<String> parseUrls(BufferedReader reader) throws IOException {
+        Set<String> urls = new HashSet<>();
+
+        String urlsLine = reader.readLine();
+        Matcher matcher = URLS_PATTERN.matcher(urlsLine);
+        while (matcher.find()) {
+            urls.add(matcher.group());
+        }
+
+        return Collections.unmodifiableSet(urls);
+    }
 }
 
 
